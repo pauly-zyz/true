@@ -1,3 +1,16 @@
 export * from "./chains.js";
 export * from "./config.js";
 export * from "./log.js";
+export * from "./costs.js";
+export * from "./optimizer.js";
+export * from "./risk.js";
+export * from "./truescore.js";
+export * from "./venue.js";
+export * from "./math/price.js";
+export * from "./math/v4/fullMath.js";
+export * from "./math/v4/tickMath.js";
+export * from "./math/v4/sqrtPriceMath.js";
+export * from "./math/v4/swapMath.js";
+export * from "./math/v4/pool.js";
+export * as dammv2 from "./math/dammv2/index.js";
+export type { DammV2PoolState, DammV2SwapResult, CollectFeeMode } from "./math/dammv2/index.js";
