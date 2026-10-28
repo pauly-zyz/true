@@ -3,9 +3,9 @@ services:
     image: timescale/timescaledb:2.17.2-pg16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-true}
+      POSTGRES_USER: ${POSTGRES_USER:-truebot}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-true_dev_only}
-      POSTGRES_DB: ${POSTGRES_DB:-true}
+      POSTGRES_DB: ${POSTGRES_DB:-truebot}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:

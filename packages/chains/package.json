@@ -10,6 +10,7 @@
     "@solana/web3.js": "^1.99.0",
     "@true/core": "workspace:*",
     "bn.js": "^5.2.5",
+    "pg": "^8.23.1",
     "viem": "^2.57.13"
   },
   "devDependencies": {
