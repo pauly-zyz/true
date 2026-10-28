@@ -1,0 +1,21 @@
+{
+  "name": "@true/chains",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@meteora-ag/cp-amm-sdk": "^1.5.1",
+    "@solana/web3.js": "^1.99.0",
+    "@true/core": "workspace:*",
+    "bn.js": "^5.2.5",
+    "viem": "^2.57.13"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@uniswap/sdk-core": "^7.20.0",
+    "@uniswap/v4-core": "^1.0.2",
+    "@uniswap/v4-periphery": "^1.0.3"
+  }
+}

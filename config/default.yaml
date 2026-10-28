@@ -1,0 +1,127 @@
+# TRUE configuration (Phase 0 / Phase 1). No secrets here: RPC URLs and DB URL come from .env.
+# Values marked VERIFY must be confirmed against official docs before being relied on.
+
+dryRun: true # env DRY_RUN overrides; anything other than true fails validation
+
+pangea:
+  apiBase: https://www.pangea.trade
+  poolsRefreshSec: 300 # Pangea caches /api/pools for up to 60 s and asks not to crawl
+
+token:
+  decimals: 9 # Pangea tokens: 9 decimals on every chain
+  bridgeDecimals: 6 # OFT shared decimals: bridged amounts truncated to 6 decimals
+
+chains:
+  # uniswapV4 addresses: from @uniswap/sdk-core 7.20.0 CHAIN_TO_ADDRESSES_MAP (checked by a unit test).
+  ethereum:
+    kind: evm
+    chainId: 1
+    quoteAsset: ETH
+    quoteDecimals: 18
+    lzEid: 30101
+    venue: uniswap-v4
+    swapGasUnits: 200000
+    fallbackGasPrice: 1.0 # gwei
+    logChunkBlocks: 2000
+    blockTimeSec: 12
+    uniswapV4:
+      poolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90"
+      stateView: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227"
+  base:
+    kind: evm
+    chainId: 8453
+    quoteAsset: ETH
+    quoteDecimals: 18
+    lzEid: 30184
+    venue: uniswap-v4
+    swapGasUnits: 200000
+    fallbackGasPrice: 0.01
+    logChunkBlocks: 5000
+    blockTimeSec: 2
+    uniswapV4:
+      poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b"
+      stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71"
+  robinhood:
+    kind: evm
+    chainId: 4663 # VERIFY against Pangea docs + eth_chainId (sdk-core lists ROBINHOOD = 4663)
+    quoteAsset: ETH
+    quoteDecimals: 18
+    lzEid: 30416
+    venue: uniswap-v4
+    swapGasUnits: 200000
+    fallbackGasPrice: 0.01
+    logChunkBlocks: 10000
+    blockTimeSec: 0.25 # VERIFY; only used as a hint, start blocks are found by timestamp search
+    uniswapV4:
+      poolManager: "0x8366a39cc670b4001a1121b8f6a443a643e40951"
+      stateView: "0xf3334192d15450cdd385c8b70e03f9a6bd9e673b"
+  bsc:
+    kind: evm
+    chainId: 56
+    quoteAsset: BNB
+    quoteDecimals: 18
+    lzEid: 30102
+    venue: uniswap-v4
+    swapGasUnits: 200000
+    fallbackGasPrice: 0.1
+    logChunkBlocks: 5000
+    blockTimeSec: 0.75 # VERIFY; hint only
+    uniswapV4:
+      poolManager: "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df"
+      stateView: "0xd13dd3d6e93f276fafc9db9e6bb47c1180aee0c4"
+  solana:
+    kind: solana
+    quoteAsset: SOL
+    quoteDecimals: 9
+    lzEid: 30168
+    venue: meteora-damm-v2
+    swapGasUnits: 200000 # compute units
+    fallbackGasPrice: 10000 # priority fee, micro-lamports per CU
+    baseFeeLamports: 5000
+    blockTimeSec: 0.4
+
+oracle:
+  source: chainlink
+  # Addresses are null until verified (docs.chain.link + on-chain description()). The code refuses to
+  # price anything in USD while a feed address is missing.
+  feeds:
+    ETH: { chain: ethereum, address: null, description: "ETH / USD", maxStalenessSec: 3600 }
+    BNB: { chain: bsc, address: null, description: "BNB / USD", maxStalenessSec: 3600 }
+    SOL: { chain: ethereum, address: null, description: "SOL / USD", maxStalenessSec: 3600 }
+
+costs:
+  bridgeFeeBps: 20 # 0.2% OFT bridge fee
+  # Estimated LayerZero message fee per bridge, by source chain, in USD. VERIFY with quoteSend.
+  lzMessageFeeUsd:
+    ethereum: 1.5
+    base: 0.2
+    robinhood: 0.2
+    bsc: 0.2
+    solana: 0.3
+  lzAmortizeOverTrades: 1 # conservative: one full LZ fee per trade
+  quoteRebalanceBps: 10 # moving ETH/BNB/SOL back to the cheap chain (estimate)
+  riskMarginBps: 30 # 0.3% safety margin on notional
+
+risk:
+  minNetProfitUsd: 1
+  minNetProfitBps: 30 # >= 0.3%
+  maxTradeFractionOfSmallerPool: 0.02 # 2% of the smaller pool's liquidity
+  maxExposurePerCoinFraction: 0.05 # 5% of capital per coin
+  minMarketCapUsd: 20000
+  dailyLossLimitFraction: 0.03 # circuit breaker at -3% of capital per day
+  excludedCoins: []
+
+trueScore:
+  multiplier: 20
+
+simulator:
+  startingCapitalUsd: 10000
+  quoteFraction: 0.5
+  chains: [base, bsc, robinhood, solana, ethereum] # priority order: cheap chains first
+  allowBridgeMode: false
+
+phase0:
+  topN: 20
+  days: 3
+  capitalTiersUsd: [500, 2000, 10000, 50000]
+  captureRates: [1.0, 0.5, 0.25]

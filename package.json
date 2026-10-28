@@ -1,0 +1,33 @@
+{
+  "name": "true-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "pnpm --filter @true/scripts migrate",
+    "phase0": "pnpm --filter @true/scripts phase0",
+    "indexer": "pnpm --filter @true/indexer start",
+    "bot": "pnpm --filter @true/bot start",
+    "cli": "pnpm --filter @true/bot cli",
+    "safety:check": "node scripts/safety-check.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  }
+}

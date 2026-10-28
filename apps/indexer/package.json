@@ -1,0 +1,16 @@
+{
+  "name": "@true/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@true/chains": "workspace:*",
+    "@true/core": "workspace:*",
+    "pg": "^8.23.1"
+  }
+}

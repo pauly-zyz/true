@@ -1,0 +1,17 @@
+{
+  "name": "@true/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "phase0": "tsx src/phase0.ts"
+  },
+  "dependencies": {
+    "@true/chains": "workspace:*",
+    "@true/core": "workspace:*",
+    "pg": "^8.23.1"
+  }
+}
