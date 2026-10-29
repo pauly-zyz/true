@@ -66,7 +66,8 @@ export class PaperSimulator {
     private readonly o: SimulatorOptions,
   ) {
     const n = o.chains.length;
-    const perCoinCap = cfg.risk.maxExposurePerCoinFraction * o.capitalUsd;
+    // allocate 80% of the per-coin cap so normal price moves do not immediately breach it
+    const perCoinCap = 0.8 * cfg.risk.maxExposurePerCoinFraction * o.capitalUsd;
     const tokenBudget = o.capitalUsd * (1 - cfg.simulator.quoteFraction);
     const perCoin = o.coins.length ? Math.min(perCoinCap, tokenBudget / o.coins.length) : 0;
     let tokenSpent = 0;

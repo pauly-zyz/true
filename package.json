@@ -18,7 +18,8 @@
     "indexer": "pnpm --filter @true/indexer start",
     "bot": "pnpm --filter @true/bot start",
     "cli": "pnpm --filter @true/bot cli",
-    "safety:check": "node scripts/safety-check.mjs"
+    "safety:check": "node scripts/safety-check.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm safety:check"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

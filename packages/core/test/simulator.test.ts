@@ -29,7 +29,7 @@ describe("PaperSimulator", () => {
     const { v, sim } = setup();
     const eq = sim.equityUsd(m.quoteUsd, usdOf(v));
     expect(eq).toBeCloseTo(20_000, 0);
-    expect(sim.coinExposureUsd("coin", usdOf(v))).toBeCloseTo(0.05 * 20_000, 0); // capped at 5%
+    expect(sim.coinExposureUsd("coin", usdOf(v))).toBeCloseTo(0.8 * 0.05 * 20_000, 0); // 80% of the 5% cap
   });
 
   it("executes a profitable trade and moves balances consistently", () => {
@@ -59,7 +59,11 @@ describe("PaperSimulator", () => {
     const ctx = { ts: 10, stateTs: 5, marketCapUsd: 1e6, tokenUsd: usdOf(v) };
     expect(sim.tryExecute("coin", opp, v.base, v.bsc, m, ctx).executed).toBe(true);
     expect(sim.tryExecute("coin", opp, v.base, v.bsc, m, { ...ctx, ts: 11 }).reasons[0]).toMatch(/cooldown/);
-    sim.tokens.get("coin")!.bsc = 10_000_000; // inventory topped up, as after a rebalance
+    // a rebalance moves tokens back from base to bsc (total inventory unchanged)
+    const bal = sim.tokens.get("coin")!;
+    const back = sim.targetTokens.get("coin")! - bal.bsc!;
+    bal.base = bal.base! - back;
+    bal.bsc = bal.bsc! + back;
     const third = sim.tryExecute("coin", opp, v.base, v.bsc, m, { ...ctx, ts: 12, stateTs: 12 });
     expect(third.reasons).toEqual([]);
   });
