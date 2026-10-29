@@ -34,17 +34,27 @@ export async function startLive(o: RuntimeOptions): Promise<{ stop: () => Promis
   let stopped = false;
   let pollTimer: NodeJS.Timeout | null = null;
 
-  const refresh = async () => {
+  const load = async (): Promise<boolean> => {
     try {
       const snap = await pools.get();
       store.seedFromSnapshot(snap, o.coins);
       log.info({ readAt: snap.readAt, coins: o.coins.length }, "pangea pools refreshed");
+      return true;
     } catch (e) {
       log.warn({ err: (e as Error).message }, "pangea pools refresh failed");
+      return false;
     }
+  };
+  const refresh = async () => {
+    await load();
     if (!stopped) pollTimer = setTimeout(refresh, cfg.pangea.poolsRefreshSec * 1000);
   };
-  await refresh();
+  // the first reading is required (coin list, ranges, quote prices): retry with backoff
+  for (let attempt = 0; !(await load()); attempt++) {
+    if (attempt >= 5) throw new Error("could not read /api/pools after 6 attempts");
+    await new Promise((r) => setTimeout(r, 10_000 * (attempt + 1)));
+  }
+  pollTimer = setTimeout(refresh, cfg.pangea.poolsRefreshSec * 1000);
 
   const watchers: EvmSwapWatcher[] = [];
   for (const chain of EVM_CHAINS) {

@@ -88,7 +88,7 @@ export class PangeaPoolsClient {
   async get(): Promise<PangeaPoolsResponse> {
     const now = Date.now();
     if (this.last && now - this.last.at < this.minIntervalSec * 1000) return this.last.data;
-    const res = await this.fetchImpl(`${this.apiBase}/api/pools`, { headers: { accept: "application/json" } });
+    const res = await this.fetchImpl(`${this.apiBase}/api/pools`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(60_000) });
     if (!res.ok) throw new Error(`GET /api/pools -> ${res.status}`);
     const data = parsePoolsResponse(await res.json());
     this.last = { at: now, data };
