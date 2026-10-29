@@ -106,6 +106,14 @@ export const configSchema = z.object({
     chains: z.array(z.enum(CHAINS)).min(2),
     /** Bridge mode is disabled by default in Phase 1 (inventory mode only). */
     allowBridgeMode: z.boolean().default(false),
+    rebalanceBelow: z.number().min(0).max(1).default(0.3),
+    maxSnapshotAgeSec: z.number().int().positive().default(660),
+    evaluateDebounceMs: z.number().int().nonnegative().default(250),
+    gapSnapshotEverySec: z.number().int().positive().default(30),
+    pnlEverySec: z.number().int().positive().default(60),
+    rebalanceEverySec: z.number().int().positive().default(300),
+    logRejectedEverySec: z.number().int().positive().default(60),
+    evmPollMs: z.number().int().positive().default(1000),
   }),
   phase0: z.object({
     scenarios: z

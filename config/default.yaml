@@ -125,6 +125,15 @@ simulator:
   quoteFraction: 0.5
   chains: [base, bsc, robinhood, solana, ethereum] # priority order: cheap chains first
   allowBridgeMode: false
+  rebalanceBelow: 0.3 # rebalance a chain when its balance falls below 30% of target
+  # Chains without an RPC feed fall back to /api/pools readings; ignore readings older than this.
+  maxSnapshotAgeSec: 660
+  evaluateDebounceMs: 250
+  gapSnapshotEverySec: 30
+  pnlEverySec: 60
+  rebalanceEverySec: 300
+  logRejectedEverySec: 60 # log a rejected opportunity per coin/pair at most this often
+  evmPollMs: 1000 # HTTP polling interval when no WebSocket RPC is configured
 
 phase0:
   # Sensitivity scenarios: each overrides parts of this config for one extra pass of the analysis.
