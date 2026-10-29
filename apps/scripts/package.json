@@ -7,7 +7,10 @@
   "types": "src/index.ts",
   "scripts": {
     "migrate": "tsx src/migrate.ts",
-    "phase0": "tsx src/phase0.ts"
+    "phase0": "tsx src/phase0.ts",
+    "phase0:collect": "tsx src/collect-snapshots.ts",
+    "phase0:fees": "tsx src/fees.ts",
+    "phase0:history": "tsx src/fetch-history.ts"
   },
   "dependencies": {
     "@true/chains": "workspace:*",
