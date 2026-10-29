@@ -54,6 +54,13 @@ export function gasCostUsd(cfg: Config, chain: ChainName, mkt: MarketContext): n
   return gp * 1e-9 * c.swapGasUnits * native;
 }
 
+/** LayerZero fee for bridging tokens from `from` to `to` (inventory rebalance direction). */
+export function lzMessageFeeUsd(cfg: Config, from: ChainName, to: ChainName): number {
+  const f = cfg.costs.lzMessageFeeUsd;
+  if (from === "solana") return f.fromSolana;
+  return f.byDestination[to] ?? 0;
+}
+
 /** OFT bridges round amounts down to `bridgeDecimals` (6) out of `decimals` (9). */
 export function truncateToBridgePrecision(amount: bigint, decimals: number, bridgeDecimals: number): bigint {
   if (bridgeDecimals >= decimals) return amount;
@@ -93,7 +100,7 @@ export function evaluateArb(
 
   const gasUsd = gasCostUsd(cfg, buy.chain, mkt) + gasCostUsd(cfg, sell.chain, mkt);
   const bridgeFeeUsd = tokenSoldHuman * sellTokenUsd * (cfg.costs.bridgeFeeBps / 1e4);
-  const lzFeeUsd = (cfg.costs.lzMessageFeeUsd[buy.chain] ?? 0) / cfg.costs.lzAmortizeOverTrades;
+  const lzFeeUsd = lzMessageFeeUsd(cfg, buy.chain, sell.chain) / cfg.costs.lzAmortizeOverTrades;
   const quoteRebalanceUsd = quoteOutUsd * (cfg.costs.quoteRebalanceBps / 1e4);
   const riskMarginUsd = quoteInUsd * (cfg.costs.riskMarginBps / 1e4);
 

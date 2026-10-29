@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateArb, gasCostUsd, truncateToBridgePrecision, usdToQuoteUnits } from "../src/costs.js";
+import { evaluateArb, gasCostUsd, lzMessageFeeUsd, truncateToBridgePrecision, usdToQuoteUnits } from "../src/costs.js";
 import { findBestSize } from "../src/optimizer.js";
 import { CircuitBreaker, checkTrade, maxTradeUsd, poolLiquidityUsd } from "../src/risk.js";
 import { computeSpread, trueScore } from "../src/truescore.js";
@@ -66,13 +66,21 @@ describe("profitability", () => {
     expect(v.reasons.join()).toMatch(/net profit/);
   });
 
-  it("costs > profit: Ethereum gas + LZ fee kill a small trade that would work on Base", () => {
-    const buyEth = v4FullRange("ethereum", 1e-6, 0.5); // tiny pool
-    const sellBase = v4FullRange("base", 1.04e-6, 0.5);
-    const best = findBestSize(cfg, buyEth, sellBase, mkt(), { maxUsd: 30 })!;
+  it("costs > profit: Ethereum gas + LZ fee kill a small trade that would work between cheap chains", () => {
+    const buyBase = v4FullRange("base", 1e-6, 0.5); // tiny pools
+    const sellEth = v4FullRange("ethereum", 1.04e-6, 0.5);
+    const best = findBestSize(cfg, buyBase, sellEth, mkt(), { maxUsd: 30 })!;
     expect(best.costs.gasUsd).toBeGreaterThan(0.6);
-    expect(best.costs.lzFeeUsd).toBe(1.5);
+    expect(best.costs.lzFeeUsd).toBe(1.8); // bridging inventory into Ethereum
     expect(best.netUsd).toBeLessThan(cfg.risk.minNetProfitUsd);
+    const cheap = findBestSize(cfg, v4FullRange("base", 1e-6, 0.5), v4FullRange("robinhood", 1.04e-6, 0.5), mkt(), { maxUsd: 30 })!;
+    expect(cheap.netUsd).toBeGreaterThan(best.netUsd);
+  });
+
+  it("LayerZero fee depends on the destination, and is cheap out of Solana", () => {
+    expect(lzMessageFeeUsd(cfg, "base", "ethereum")).toBe(1.8);
+    expect(lzMessageFeeUsd(cfg, "robinhood", "solana")).toBe(1.02);
+    expect(lzMessageFeeUsd(cfg, "solana", "base")).toBe(0.06);
   });
 
   it("large slippage: oversizing into a shallow pool destroys the edge", () => {

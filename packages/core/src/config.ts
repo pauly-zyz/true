@@ -70,8 +70,11 @@ export const configSchema = z.object({
   costs: z.object({
     /** Bridge fee in basis points of bridged amount (0.2% = 20 bps). */
     bridgeFeeBps: z.number().nonnegative(),
-    /** Estimated LayerZero message fee in USD by source chain (until quoteSend is wired). */
-    lzMessageFeeUsd: z.record(z.enum(CHAINS), z.number().nonnegative()),
+    /** LayerZero message fee in USD: by destination chain, with a separate figure out of Solana. */
+    lzMessageFeeUsd: z.object({
+      byDestination: z.record(z.enum(CHAINS), z.number().nonnegative()),
+      fromSolana: z.number().nonnegative(),
+    }),
     /**
      * Inventory mode bridges tokens back in batched rebalances. The LZ fee of one rebalance is
      * spread over this many trades. 1 = charge a full LZ fee to every trade (most conservative).

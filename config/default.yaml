@@ -91,13 +91,17 @@ oracle:
 
 costs:
   bridgeFeeBps: 20 # 0.2% OFT bridge fee
-  # Estimated LayerZero message fee per bridge, by source chain, in USD. VERIFY with quoteSend.
+  # LayerZero message fee per bridge (USD, at ETH ~ $2350). The fee depends mostly on the destination.
+  # Measured with quoteSend from Robinhood on 2026-10-29: ->base 0.000108 ETH, ->bsc 0.000112,
+  # ->ethereum 0.000764, ->solana 0.000430. Pangea docs (2026-10-19): Solana->Base 0.00058 SOL.
   lzMessageFeeUsd:
-    ethereum: 1.5
-    base: 0.2
-    robinhood: 0.2
-    bsc: 0.2
-    solana: 0.3
+    byDestination:
+      ethereum: 1.8
+      base: 0.26
+      robinhood: 0.26 # assumed equal to base (not yet measured)
+      bsc: 0.27
+      solana: 1.02
+    fromSolana: 0.06 # Solana -> any EVM chain
   lzAmortizeOverTrades: 1 # conservative: one full LZ fee per trade
   quoteRebalanceBps: 10 # moving ETH/BNB/SOL back to the cheap chain (estimate)
   riskMarginBps: 30 # 0.3% safety margin on notional

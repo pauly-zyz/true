@@ -67,13 +67,16 @@ export async function sampleHookFees(
   fromBlock: bigint,
   toBlock: bigint,
   maxSamples = 3,
+  pauseMs = 300, // public RPCs rate-limit aggressively
 ): Promise<HookFeeSample[]> {
+  const pause = () => new Promise((r) => setTimeout(r, pauseMs));
   const swaps = await client.getLogs({ address: poolManager, event: poolManagerEventsAbi[2], args: { id: poolId }, fromBlock, toBlock });
   const out: HookFeeSample[] = [];
   for (const s of swaps.slice(0, maxSamples * 3)) {
     if (out.length >= maxSamples) break;
     const amount0 = s.args.amount0;
     if (amount0 === undefined || amount0 === 0n) continue;
+    await pause();
     const receipt = await client.getTransactionReceipt({ hash: s.transactionHash });
     // the hook's claim: ERC-6909 Transfer on the PoolManager, minted (from = 0) to the hook, id 0 = native
     const claims = receipt.logs
