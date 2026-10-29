@@ -16,3 +16,4 @@ export * as dammv2 from "./math/dammv2/index.js";
 export type { DammV2PoolState, DammV2SwapResult, CollectFeeMode } from "./math/dammv2/index.js";
 export * from "./gaps.js";
 export * from "./scan.js";
+export * from "./simulator.js";
