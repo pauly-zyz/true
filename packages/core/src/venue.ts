@@ -36,10 +36,23 @@ export interface V4VenueParams {
   tokenIsCurrency0: boolean;
   tokenDecimals: number;
   quoteDecimals: number;
+  /**
+   * Fee charged by a hook on the quote side, in pips (1e6 = 100%): taken from the quote input on
+   * buys (before the swap) and from the quote output on sells (after the swap), rounded down.
+   * Pangea's EVM pools have LP fee 0 and charge the trading fee this way (verified on Robinhood).
+   */
+  quoteHookFeePips?: bigint;
 }
+
+const PIPS = 1_000_000n;
 
 export function v4Venue(p: V4VenueParams): Venue {
   const { state, tokenIsCurrency0 } = p;
+  const hookPips = p.quoteHookFeePips ?? 0n;
+  if (hookPips < 0n || hookPips >= PIPS) throw new Error("quoteHookFeePips out of range");
+  if (hookPips > 0n && state.feePips > 0n) {
+    throw new Error("combining a pool LP fee with a quote hook fee is not modelled");
+  }
   const dec0 = tokenIsCurrency0 ? p.tokenDecimals : p.quoteDecimals;
   const dec1 = tokenIsCurrency0 ? p.quoteDecimals : p.tokenDecimals;
   const swap = (zeroForOne: boolean, amountIn: bigint): Fill => {
@@ -81,8 +94,20 @@ export function v4Venue(p: V4VenueParams): Venue {
       const quote = tokenIsCurrency0 ? amt1 : amt0;
       return { token: fromUnits(token, p.tokenDecimals), quote: fromUnits(quote, p.quoteDecimals) };
     },
-    buyToken: (quoteIn) => swap(!tokenIsCurrency0, quoteIn),
-    sellToken: (tokenIn) => swap(tokenIsCurrency0, tokenIn),
+    buyToken: (quoteIn) => {
+      const hookFee = (quoteIn * hookPips) / PIPS;
+      const f = swap(!tokenIsCurrency0, quoteIn - hookFee);
+      if (hookPips === 0n) return f;
+      // the hook keeps its fee even if the pool only partially fills
+      return { ...f, amountIn: f.amountIn + hookFee, feeAmount: f.feeAmount + hookFee, feeOnInput: true };
+    },
+    sellToken: (tokenIn) => {
+      const f = swap(tokenIsCurrency0, tokenIn);
+      if (hookPips === 0n) return f;
+      const hookFee = (f.amountOut * hookPips) / PIPS;
+      // pool LP fee (if any) is in the token here; with a quote hook fee the pool fee is 0 on Pangea
+      return { ...f, amountOut: f.amountOut - hookFee, feeAmount: hookFee + f.feeAmount, feeOnInput: false };
+    },
   };
 }
 
