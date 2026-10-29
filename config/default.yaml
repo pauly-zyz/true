@@ -21,7 +21,9 @@ chains:
     lzEid: 30101
     venue: uniswap-v4
     swapGasUnits: 200000
-    fallbackGasPrice: 1.0 # gwei
+    # gwei. No Ethereum RPC yet: Pangea's launch-fee example (TEST4: ~$2.3 EVM gas for 4 x 7.29M gas)
+    # implies Ethereum gas <= ~0.13 gwei in Oct 2026; 0.2 is a conservative stand-in. VERIFY with eth_gasPrice.
+    fallbackGasPrice: 0.2
     logChunkBlocks: 2000
     blockTimeSec: 12
     uniswapV4:
@@ -125,6 +127,15 @@ simulator:
   allowBridgeMode: false
 
 phase0:
+  # Sensitivity scenarios: each overrides parts of this config for one extra pass of the analysis.
+  scenarios:
+    - name: batched-rebalance
+      description: LayerZero fee shared by 10 trades (inventory rebalanced in batches)
+      costs: { lzAmortizeOverTrades: 10 }
+    - name: batched-low-min
+      description: batched rebalance and minimum net profit lowered to $0.25
+      costs: { lzAmortizeOverTrades: 10 }
+      risk: { minNetProfitUsd: 0.25 }
   topN: 20
   days: 3
   capitalTiersUsd: [500, 2000, 10000, 50000]

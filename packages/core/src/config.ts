@@ -108,6 +108,16 @@ export const configSchema = z.object({
     allowBridgeMode: z.boolean().default(false),
   }),
   phase0: z.object({
+    scenarios: z
+      .array(
+        z.object({
+          name: z.string(),
+          description: z.string(),
+          costs: z.record(z.string(), z.unknown()).optional(),
+          risk: z.record(z.string(), z.unknown()).optional(),
+        }),
+      )
+      .default([]),
     topN: z.number().int().positive(),
     days: z.number().positive(),
     capitalTiersUsd: z.array(z.number().positive()).min(1),
@@ -167,4 +177,9 @@ export function requireAddress(value: string | null, what: string): `0x${string}
     throw new Error(`${what} is not configured. Fill it in config after verifying against official docs.`);
   }
   return value as `0x${string}`;
+}
+
+/** Apply a Phase 0 scenario's overrides and re-validate. */
+export function withScenario(cfg: Config, s: Config["phase0"]["scenarios"][number]): Config {
+  return configSchema.parse({ ...cfg, costs: { ...cfg.costs, ...(s.costs ?? {}) }, risk: { ...cfg.risk, ...(s.risk ?? {}) } });
 }
