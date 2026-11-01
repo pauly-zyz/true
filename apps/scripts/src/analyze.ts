@@ -96,7 +96,7 @@ function analyse(c: Config) {
       let bestGap: number | null = null;
       let base: ReturnType<typeof scanCoin> | null = null;
       for (const tier of tiers) {
-        const s = scanCoin(c, venues, mkt, { slug, capitalUsd: tier, marketCapUsd: mcap, minGap: minGapFor(fee.feePips) });
+        const s = scanCoin(c, venues, mkt, { slug, capitalUsd: tier, marketCapUsd: mcap, minGap: minGapFor(fee.feePips), chains: c.simulator.chains });
         base ??= s;
         const e = s.bestExecutable;
         hits[String(tier)] = e?.best

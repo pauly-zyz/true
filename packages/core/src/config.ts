@@ -123,6 +123,8 @@ export const configSchema = z.object({
           description: z.string(),
           costs: z.record(z.string(), z.unknown()).optional(),
           risk: z.record(z.string(), z.unknown()).optional(),
+          /** Restrict the chains that may be traded (sets simulator.chains). */
+          chains: z.array(z.enum(CHAINS)).min(2).optional(),
         }),
       )
       .default([]),
@@ -189,5 +191,10 @@ export function requireAddress(value: string | null, what: string): `0x${string}
 
 /** Apply a Phase 0 scenario's overrides and re-validate. */
 export function withScenario(cfg: Config, s: Config["phase0"]["scenarios"][number]): Config {
-  return configSchema.parse({ ...cfg, costs: { ...cfg.costs, ...(s.costs ?? {}) }, risk: { ...cfg.risk, ...(s.risk ?? {}) } });
+  return configSchema.parse({
+    ...cfg,
+    costs: { ...cfg.costs, ...(s.costs ?? {}) },
+    risk: { ...cfg.risk, ...(s.risk ?? {}) },
+    simulator: { ...cfg.simulator, ...(s.chains ? { chains: s.chains } : {}) },
+  });
 }

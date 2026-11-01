@@ -145,6 +145,14 @@ phase0:
       description: batched rebalance and minimum net profit lowered to $0.25
       costs: { lzAmortizeOverTrades: 10 }
       risk: { minNetProfitUsd: 0.25 }
+    - name: phase2-chains
+      description: only Base, BSC and Robinhood Chain may be traded (the Phase 2 starting set)
+      chains: [base, bsc, robinhood]
+    - name: phase2-chains-batched
+      description: Base, BSC and Robinhood only, with batched rebalance and a $0.25 minimum
+      chains: [base, bsc, robinhood]
+      costs: { lzAmortizeOverTrades: 10 }
+      risk: { minNetProfitUsd: 0.25 }
   topN: 20
   days: 3
   capitalTiersUsd: [500, 2000, 10000, 50000]
