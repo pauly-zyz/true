@@ -30,10 +30,13 @@
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "eslint": "^10.13.0",
+    "hardhat": "2.29.1",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^5.0.5"
+    "viem": "^2.57.13",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
   }
 }

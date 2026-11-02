@@ -3,9 +3,9 @@
 Riset arbitrase lintas 5 chain (Ethereum, Base, Robinhood Chain, BSC, Solana) untuk koin-koin
 Pangea, bot paper trading, dan scanner harga **True Score**. Rancangan: [docs/RANCANGAN.md](docs/RANCANGAN.md).
 
-> **Fase 0 dan 1 tidak pernah mengirim transaksi.** Tidak ada wallet, private key, maupun kode
-> penandatanganan di repo ini. `DRY_RUN=true` diwajibkan oleh validasi config, dan `pnpm safety:check`
-> menolak kode yang bisa menandatangani atau mengirim transaksi.
+> **Default selalu dry run.** Transaksi hanya bisa dikirim oleh `packages/executor` (Fase 2), dan hanya
+> bila `DRY_RUN=false` **dan** `LIVE_CONFIRM=yes`. `pnpm safety:check` menolak kode penandatanganan di
+> luar `packages/executor` dan hanya mengizinkan `apps/live` mengimpornya.
 
 Hasil Fase 0: [reports/phase0.md](reports/phase0.md).
 
@@ -22,6 +22,10 @@ packages/chains         klien /api/pools, model pool dari snapshot, klien EVM re
 apps/scripts            Fase 0: pengumpulan data, analisis, laporan; migrasi DB
 apps/indexer            Fase 1: menyimpan setiap swap pool yang dipantau ke Postgres
 apps/bot                Fase 1: Price & Gap Engine + simulator mode inventaris + CLI dashboard
+packages/executor       Fase 2: satu-satunya kode yang boleh menandatangani (swap v4 via Universal
+                        Router, simulasi, receipt, Permit2, bridge OFT, rebalance, executor dua leg)
+apps/live               Fase 2: bot live/dry run, preflight, Telegram, kill/resume
+test/fork               Fase 2: test integrasi di fork mainnet (anvil, atau Hardhat bila anvil tidak ada)
 ```
 
 ## Setup
@@ -114,6 +118,37 @@ pnpm indexer
 ```
 
 Opsional: hanya menyimpan setiap swap pool yang dipantau ke tabel `swaps`.
+
+## Fase 2: eksekusi live (modal kecil)
+
+Chain live diatur di `config/default.yaml` bagian `live.chains`: Base, BSC dan Robinhood aktif; Solana
+dan Ethereum mati sampai dinyalakan manual (eksekusi Solana belum dibangun).
+
+1. Isi RPC, wallet bot per chain (`BOT_PK_<CHAIN>`) dan Telegram di `.env`.
+2. Cek semua prasyarat (read-only; harus lulus semua):
+
+```bash
+pnpm live:preflight
+```
+
+3. Uji di fork mainnet (anvil bila terpasang, kalau tidak Hardhat):
+
+```bash
+pnpm test:fork
+```
+
+4. Jalankan dalam dry run: semua langkah nyata (quote, simulasi `eth_call`, pencatatan) kecuali broadcast.
+
+```bash
+pnpm live
+```
+
+5. Live hanya dengan `DRY_RUN=false` dan `LIVE_CONFIRM=yes` di `.env`, dinyalakan oleh manusia.
+
+Kontrol: kill switch (`pnpm live:kill [alasan]`, `/kill` di Telegram, atau file `data/KILL`),
+`pnpm live:resume <koin>` setelah leg gagal, circuit breaker rugi harian 3% (menulis kill file,
+butuh restart manual). ETH/BNB tidak dipindah otomatis; bot hanya mengirim alert saldo menipis.
+Semua trade, leg, bridge, saldo dan kejadian risiko tercatat di tabel `live_*` dan `risk_events`.
 
 ## Pengujian
 
