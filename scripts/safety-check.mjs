@@ -1,36 +1,58 @@
 #!/usr/bin/env node
-// Fails if Phase 0/1 code contains anything that could sign or send a transaction,
-// or anything that looks like a committed secret.
+// Repository safety rules (run by `pnpm check`):
+// 1. Code that can sign or send transactions may only live in packages/executor.
+// 2. Only apps/live (and packages/executor itself) may import @true/executor.
+// 3. No committed secrets: no .env, no 32-byte hex literals that look like private keys.
 import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
-const files = execSync("git ls-files 'apps/**/*.ts' 'packages/**/*.ts'", { encoding: "utf8" })
-  .split("\n")
-  .filter(Boolean);
+const files = execSync("git ls-files", { encoding: "utf8" }).split("\n").filter(Boolean);
+const code = files.filter((f) => /^(apps|packages)\/.*\.(ts|mts|js|mjs)$/.test(f));
 
-const forbidden = [
-  /privateKeyToAccount|mnemonicToAccount|hdKeyToAccount/,
-  /\b(signTransaction|sendTransaction|sendRawTransaction|writeContract|signMessage)\b/,
+const signing = [
+  /privateKeyToAccount|mnemonicToAccount|hdKeyToAccount|createWalletClient/,
+  /\b(signTransaction|sendTransaction|sendRawTransaction|writeContract|signMessage|signTypedData)\b/,
   /Keypair\.(fromSecretKey|fromSeed|generate)/,
-  /PRIVATE_KEY|SECRET_KEY|MNEMONIC/,
-  /0x[0-9a-fA-F]{64}\b(?!.*(topic|hash|poolId|salt))/i,
+  /BOT_PK_|PRIVATE_KEY|SECRET_KEY|MNEMONIC/,
 ];
+const keyLiteral = /0x[0-9a-fA-F]{64}\b/;
+const keyContext = /(topic|hash|poolId|salt|guid|orderId|PoolId|txHash|\/\/ poolId)/;
 
 let bad = 0;
-import { readFileSync } from "node:fs";
+const fail = (msg) => {
+  console.error(msg);
+  bad++;
+};
+
 for (const f of files) {
-  if (f === "scripts/safety-check.mjs") continue;
+  if (/(^|\/)\.env($|\.)/.test(f) && !f.endsWith(".env.example"))
+    fail(`${f}: .env files must never be committed`);
+}
+
+for (const f of code) {
+  const inExecutor = f.startsWith("packages/executor/");
   const lines = readFileSync(f, "utf8").split("\n");
   lines.forEach((line, i) => {
-    for (const re of forbidden) {
-      if (re.test(line) && !line.includes("safety-check: allow")) {
-        console.error(`${f}:${i + 1}: forbidden pattern ${re}`);
-        bad++;
-      }
+    const where = `${f}:${i + 1}`;
+    if (!inExecutor) {
+      for (const re of signing)
+        if (re.test(line)) fail(`${where}: signing code outside packages/executor (${re})`);
+    } else if (!f.includes("/test/")) {
+      // inside the executor, signing calls must be explicitly marked so every one is reviewed
+      for (const re of signing)
+        if (re.test(line) && !line.includes("safety-check: allow"))
+          fail(`${where}: unmarked signing code (${re})`);
     }
+    if (/from\s+["']@true\/executor/.test(line) && !inExecutor && !f.startsWith("apps/live/")) {
+      fail(`${where}: only apps/live may import @true/executor`);
+    }
+    if (keyLiteral.test(line) && !keyContext.test(line))
+      fail(`${where}: 32-byte hex literal (possible private key)`);
   });
 }
+
 if (bad) {
-  console.error(`\nsafety-check: ${bad} problem(s). Phase 0/1 must not sign transactions or hold keys.`);
+  console.error(`\nsafety-check: ${bad} problem(s).`);
   process.exit(1);
 }
-console.log(`safety-check: OK (${files.length} files)`);
+console.log(`safety-check: OK (${code.length} code files)`);

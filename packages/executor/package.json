@@ -1,0 +1,22 @@
+{
+  "name": "@true/executor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@true/chains": "workspace:*",
+    "@true/core": "workspace:*",
+    "@uniswap/permit2-sdk": "^1.4.1",
+    "@uniswap/sdk-core": "^7.20.0",
+    "@uniswap/universal-router-sdk": "5.16.0",
+    "@uniswap/v4-sdk": "^2.4.4",
+    "pino": "^10.4.0",
+    "viem": "^2.57.13",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.1"
+  }
+}

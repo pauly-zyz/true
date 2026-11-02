@@ -35,8 +35,17 @@ const chainSchema = z.object({
     .object({
       poolManager: nullableAddress,
       stateView: nullableAddress,
+      /** Official V4Quoter (@uniswap/sdk-core), used for pre-trade quotes. */
+      quoter: nullableAddress,
+      /** Official Universal Router (@uniswap/universal-router-sdk) and its version. */
+      universalRouter: nullableAddress,
+      universalRouterVersion: z.enum(["2.0", "2.1.1", "2.1.2", "2.2.0"]).nullable().default(null),
+      /** Canonical Permit2 (@uniswap/permit2-sdk). */
+      permit2: nullableAddress,
     })
-    .default({ poolManager: null, stateView: null }),
+    .default({ poolManager: null, stateView: null, quoter: null, universalRouter: null, universalRouterVersion: null, permit2: null }),
+  /** Transaction explorer URL prefix, e.g. https://basescan.org/tx/ */
+  explorerTx: z.string().url().nullable().default(null),
 });
 export type ChainConfig = z.infer<typeof chainSchema>;
 
@@ -50,7 +59,31 @@ const oracleFeedSchema = z.object({
 });
 
 export const configSchema = z.object({
-  dryRun: z.literal(true, { message: "DRY_RUN must be true in Phase 0/1" }),
+  /** true = no transaction is ever broadcast. false only together with LIVE_CONFIRM=yes. */
+  dryRun: z.boolean(),
+  /** Set by parseConfig from the environment: live trading is armed (DRY_RUN=false and LIVE_CONFIRM=yes). */
+  liveArmed: z.boolean().default(false),
+  live: z
+    .object({
+      /** Chains on which the live executor may trade; Solana and Ethereum stay off until enabled by hand. */
+      chains: z.record(z.enum(CHAINS), z.object({ enabled: z.boolean(), maxCapitalUsd: z.number().nonnegative() })),
+      capitalUsd: z.number().positive(),
+      maxTradeUsd: z.number().positive(),
+      maxTradesPerHour: z.number().int().positive(),
+      /** Abort when the simulated output differs from the model by more than this. */
+      simToleranceBps: z.number().nonnegative(),
+      /** amountOutMinimum = simulated output minus this. */
+      slippageBps: z.number().nonnegative(),
+      deadlineSec: z.number().int().positive(),
+      killFile: z.string(),
+      lowBalanceUsd: z.object({ gas: z.number().nonnegative(), quote: z.number().nonnegative(), token: z.number().nonnegative() }),
+      balanceCheckEverySec: z.number().int().positive(),
+      rebalanceEverySec: z.number().int().positive(),
+      /** Token rebalance: bridge from the richest chain when a chain falls below this fraction of target. */
+      rebalanceBelow: z.number().min(0).max(1),
+      receiptTimeoutSec: z.number().int().positive(),
+    })
+    .optional(),
   pangea: z.object({
     apiBase: z.string().url(),
     /** How often the coin list is refreshed. Pangea asks not to crawl; 60 s cache server side. */
@@ -172,6 +205,10 @@ export function parseConfig(raw: unknown, env: NodeJS.ProcessEnv = process.env):
   >;
   const envDry = parseBoolEnv(env.DRY_RUN);
   obj.dryRun = envDry ?? (obj.dryRun as boolean | undefined) ?? true;
+  if (obj.dryRun === false && env.LIVE_CONFIRM !== "yes") {
+    throw new Error("DRY_RUN=false requires LIVE_CONFIRM=yes; refusing to arm live trading");
+  }
+  obj.liveArmed = obj.dryRun === false && env.LIVE_CONFIRM === "yes";
   return configSchema.parse(obj);
 }
 

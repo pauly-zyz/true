@@ -12,7 +12,8 @@ token:
   bridgeDecimals: 6 # OFT shared decimals: bridged amounts truncated to 6 decimals
 
 chains:
-  # uniswapV4 addresses: from @uniswap/sdk-core 7.20.0 CHAIN_TO_ADDRESSES_MAP (checked by a unit test).
+  # uniswapV4 addresses: poolManager/stateView/quoter from @uniswap/sdk-core 7.20.0, universalRouter from
+  # @uniswap/universal-router-sdk 5.16.0, permit2 from @uniswap/permit2-sdk (all checked by unit tests).
   ethereum:
     kind: evm
     chainId: 1
@@ -29,6 +30,11 @@ chains:
     uniswapV4:
       poolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90"
       stateView: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227"
+      quoter: "0x99bd42b2b22e531f283b7f8a86dff631eb16a9d1"
+      universalRouter: null
+      universalRouterVersion: null
+      permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    explorerTx: https://etherscan.io/tx/
   base:
     kind: evm
     chainId: 8453
@@ -43,6 +49,11 @@ chains:
     uniswapV4:
       poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b"
       stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71"
+      quoter: "0xe1a6c5803e3c44368b171bd680c7d32dfc92ca47"
+      universalRouter: "0xd6145b2D3F379919E8CdEda7B97e37c4b2Ca9c40"
+      universalRouterVersion: "2.1.2"
+      permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    explorerTx: https://basescan.org/tx/
   robinhood:
     kind: evm
     chainId: 4663 # VERIFY against Pangea docs + eth_chainId (sdk-core lists ROBINHOOD = 4663)
@@ -57,6 +68,11 @@ chains:
     uniswapV4:
       poolManager: "0x8366a39cc670b4001a1121b8f6a443a643e40951"
       stateView: "0xf3334192d15450cdd385c8b70e03f9a6bd9e673b"
+      quoter: "0x8dc178efb8111bb0973dd9d722ebeff267c98f94"
+      universalRouter: "0x204FAca1764B154221e35c0d20aBb3c525710498"
+      universalRouterVersion: "2.1.2"
+      permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    explorerTx: null # VERIFY: official Robinhood Chain explorer URL
   bsc:
     kind: evm
     chainId: 56
@@ -71,6 +87,11 @@ chains:
     uniswapV4:
       poolManager: "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df"
       stateView: "0xd13dd3d6e93f276fafc9db9e6bb47c1180aee0c4"
+      quoter: "0x95c086d7fe28add842ee220fef225a777474d781"
+      universalRouter: "0xDc264714F68d84CF29BC605589405E78bDBE7C9f"
+      universalRouterVersion: "2.1.2"
+      permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    explorerTx: https://bscscan.com/tx/
   solana:
     kind: solana
     quoteAsset: SOL
@@ -116,6 +137,27 @@ risk:
   minMarketCapUsd: 20000
   dailyLossLimitFraction: 0.03 # circuit breaker at -3% of capital per day
   excludedCoins: []
+
+# Phase 2 live execution. Nothing is broadcast unless DRY_RUN=false AND LIVE_CONFIRM=yes.
+live:
+  chains:
+    base: { enabled: true, maxCapitalUsd: 400 }
+    bsc: { enabled: true, maxCapitalUsd: 400 }
+    robinhood: { enabled: true, maxCapitalUsd: 400 }
+    solana: { enabled: false, maxCapitalUsd: 0 } # off until enabled by hand
+    ethereum: { enabled: false, maxCapitalUsd: 0 } # off until enabled by hand
+  capitalUsd: 1200 # basis for the risk limits (exposure, daily loss)
+  maxTradeUsd: 100
+  maxTradesPerHour: 20
+  simToleranceBps: 50 # abort if simulated output differs from the model by > 0.5%
+  slippageBps: 100 # amountOutMinimum = simulated output - 1%
+  deadlineSec: 60
+  killFile: data/KILL
+  lowBalanceUsd: { gas: 2, quote: 20, token: 10 }
+  balanceCheckEverySec: 120
+  rebalanceEverySec: 600
+  rebalanceBelow: 0.3
+  receiptTimeoutSec: 90
 
 trueScore:
   multiplier: 20
