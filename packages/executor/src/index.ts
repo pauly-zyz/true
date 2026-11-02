@@ -8,3 +8,5 @@ export * from "./evm/permit2.js";
 export * from "./sender.js";
 export * from "./evm/oftBridge.js";
 export * from "./rebalancer.js";
+export * from "./legOps.js";
+export * from "./executor.js";
