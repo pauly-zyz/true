@@ -6,3 +6,5 @@ export * from "./evm/simulate.js";
 export * from "./evm/receipts.js";
 export * from "./evm/permit2.js";
 export * from "./sender.js";
+export * from "./evm/oftBridge.js";
+export * from "./rebalancer.js";
