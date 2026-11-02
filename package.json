@@ -19,7 +19,12 @@
     "bot": "pnpm --filter @true/bot start",
     "cli": "pnpm --filter @true/bot cli",
     "safety:check": "node scripts/safety-check.mjs",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm safety:check"
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm safety:check",
+    "live": "pnpm --filter @true/live start",
+    "live:preflight": "pnpm --filter @true/live preflight",
+    "live:kill": "pnpm --filter @true/live kill",
+    "live:resume": "pnpm --filter @true/live resume",
+    "test:fork": "vitest run --config vitest.fork.config.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

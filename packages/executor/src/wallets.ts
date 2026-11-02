@@ -23,3 +23,9 @@ export function loadEvmWallet(chain: ChainName, env: NodeJS.ProcessEnv = process
   if (addr && /^0x[0-9a-fA-F]{40}$/.test(addr)) return { chain, address: addr as `0x${string}` };
   return null;
 }
+
+/** Human hint naming the env variables for a chain's wallet (keeps key variable names in this module). */
+export function walletEnvHint(chain: ChainName): string {
+  const c = chain.toUpperCase();
+  return `BOT_PK_${c} or BOT_ADDRESS_${c} not set`; // safety-check: allow
+}

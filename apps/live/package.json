@@ -1,0 +1,20 @@
+{
+  "name": "@true/live",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "preflight": "tsx src/preflight.ts",
+    "kill": "tsx src/kill.ts kill",
+    "resume": "tsx src/kill.ts resume"
+  },
+  "dependencies": {
+    "@true/chains": "workspace:*",
+    "@true/core": "workspace:*",
+    "@true/executor": "workspace:*",
+    "pg": "^8.23.1",
+    "viem": "^2.57.13"
+  }
+}
